@@ -10,7 +10,6 @@ buildscript {
         classpath 'org.robovm:robovm-gradle-plugin:1.12.0'
     }
 }
-
 allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
@@ -31,7 +30,6 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }
 }
-
 project(":desktop") {
     apply plugin: "java"
 
@@ -42,7 +40,6 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
 }
-
 project(":android") {
     apply plugin: "android"
 
@@ -58,7 +55,6 @@ project(":android") {
         natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
     }
 }
-
 project(":ios") {
     apply plugin: "java"
     apply plugin: "robovm"
@@ -72,7 +68,6 @@ project(":ios") {
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
     }
 }
-
 project(":html") {
     apply plugin: "gwt"
     apply plugin: "war"
@@ -85,7 +80,6 @@ project(":html") {
         compile "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion:sources"
     }
 }
-
 project(":core") {
     apply plugin: "java"
 
@@ -94,7 +88,8 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
     }
 }
-
 tasks.eclipse.doLast {
     delete ".project"
+}
+dependencies {
 }
