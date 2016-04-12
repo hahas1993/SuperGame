@@ -28,6 +28,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Array<Rectangle> raindrops;
 	private long lastDropTime;
 
+	private double direction = 0;
+
 	@Override
 	public void create () {
 		dropImage = new Texture(Gdx.files.internal("droplet.png"));
@@ -66,17 +68,16 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		batch.end();
 
-		if(Gdx.input.isTouched()) {
+		if(Math.abs(direction) > 20) {
+			bucket.x += direction / 10;
+		}
+		/*if(Gdx.input.isTouched()) {
 			Vector3 touchPos = new Vector3();
 			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 			camera.unproject(touchPos);
 			bucket.x = (int)(touchPos.x - 64 / 2);
-		}
+		}*/
 
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT))
-			bucket.x -= 200 * Gdx.graphics.getDeltaTime();
-		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-			bucket.x += 200 * Gdx.graphics.getDeltaTime();
 		if(bucket.x < 0)
 			bucket.x = 0;
 		if(bucket.x > 800 - 64)
@@ -96,6 +97,10 @@ public class MyGdxGame extends ApplicationAdapter {
 				iter.remove();
 			}
 		}
+	}
+
+	public void setDirection(double direction){
+		this.direction = direction;
 	}
 
 	@Override

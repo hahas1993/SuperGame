@@ -94,6 +94,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     double xCenter = -1;
     double yCenter = -1;
 
+    double centerX = 0;
+    double centerY = 0;
+    double centerXT;
+    double centerYT;
+
     static { if (!OpenCVLoader.initDebug()) {  } }
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -305,12 +310,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             yCenter = (facesArray[i].y + facesArray[i].y + facesArray[i].height) / 2;
             Point center = new Point(xCenter, yCenter);
 
-            Imgproc.circle(mRgba, center, 10, new Scalar(255, 0, 0, 255), 3);
+            //Imgproc.circle(mRgba, center, 10, new Scalar(255, 0, 0, 255), 3);
 
-            Imgproc.putText(mRgba, "[" + center.x + "," + center.y + "]",
+            /*Imgproc.putText(mRgba, "[" + center.x + "," + center.y + "]",
                     new Point(center.x + 20, center.y + 20),
                     Core.FONT_HERSHEY_SIMPLEX, 0.7, new Scalar(255, 255, 255,
-                            255));
+                            255));*/
 
             Rect r = facesArray[i];
             // compute the eye area
@@ -332,24 +337,79 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             Imgproc.rectangle(mRgba, eyearea_right.tl(), eyearea_right.br(),
                     new Scalar(255, 0, 0, 255), 2);
 
-            if (learn_frames < 5) {
+
+            if (learn_frames < 10) {
+                centerX += (eyearea_left.tl().x + eyearea_right.br().x) / 2;
+                centerY += (eyearea_left.tl().y + eyearea_right.br().y) / 2;
+                learn_frames ++;
+            }
+            else {
+                if(learn_frames == 10) {
+                    centerX /= 10;
+                    centerY /= 10;
+                    learn_frames ++;
+                }
+                centerXT = (eyearea_left.tl().x + eyearea_right.br().x) / 2;
+                centerYT += (eyearea_left.tl().y + eyearea_right.br().y) / 2;
+
+                if(centerXT < centerX){
+                    Log.i(TAG, "right");
+                }
+                else if(centerXT > centerX){
+                    Log.i(TAG, "left");
+                }
+            }
+           /* Rect leftEye = null;
+            Rect rightEye = null;
+            if (learn_frames < 10) {
                 teplateR = get_template(mJavaDetectorEye, eyearea_right, 24);
                 teplateL = get_template(mJavaDetectorEye, eyearea_left, 24);
                 learn_frames++;
             } else {
-                // Learning finished, use the new templates for template
-                // matching
-                match_eye(eyearea_right, teplateR, method);
-                match_eye(eyearea_left, teplateL, method);
+                rightEye = match_eye(eyearea_right, teplateR, method);
+                leftEye = match_eye(eyearea_left, teplateL, method);
 
+                if(rightEye == null || leftEye == null)
+                    return mRgba;
+
+                double eyeAreaMidX = (eyearea_left.tl().x + eyearea_right.br().x) / 2;
+                double rightEyeMidX = (rightEye.br().x + rightEye.tl().x) / 2;
+                double leftEyeMidX = (leftEye.br().x + leftEye.tl().x) / 2;
+
+                if(learn_frames < 30) {
+                    rightEyeDistance += Math.abs(eyeAreaMidX - rightEyeMidX);
+                    leftEyeDistance += Math.abs(eyeAreaMidX - leftEyeMidX);
+                    learn_frames++;
+                }
+                else {
+                    if(learn_frames == 30) {
+                        rightEyeDistance /= 20;
+                        leftEyeDistance /= 20;
+                        learn_frames++;
+                    }
+
+                    double rightEyeDT = Math.abs(eyeAreaMidX - rightEyeMidX);
+                    double leftEyeDT = Math.abs(eyeAreaMidX - leftEyeMidX);
+
+                    Log.i(TAG, "" + rightEyeDT + " : " + rightEyeDistance);
+                    Log.i(TAG, "" + leftEyeDT + " : " + leftEyeDistance);
+                    if(rightEyeDT > rightEyeDistance && leftEyeDT < leftEyeDistance){
+                        Log.i(TAG, "left");
+                    }
+                    else if (rightEyeDT < rightEyeDistance && leftEyeDT > leftEyeDistance){
+                        Log.i(TAG, "right");
+                    }
+                }
             }
+
+
 
 
             // cut eye areas and put them to zoom windows
             Imgproc.resize(mRgba.submat(eyearea_left), mZoomWindow2,
                     mZoomWindow2.size());
             Imgproc.resize(mRgba.submat(eyearea_right), mZoomWindow,
-                    mZoomWindow.size());
+                    mZoomWindow.size());*/
 
 
         }
@@ -408,14 +468,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     }
 
-    private void match_eye(Rect area, Mat mTemplate, int type) {
+    private Rect match_eye(Rect area, Mat mTemplate, int type) {
         Point matchLoc;
         Mat mROI = mGray.submat(area);
         int result_cols = mROI.cols() - mTemplate.cols() + 1;
         int result_rows = mROI.rows() - mTemplate.rows() + 1;
         // Check for bad template size
         if (mTemplate.cols() == 0 || mTemplate.rows() == 0) {
-            return ;
+            return null;
         }
         Mat mResult = new Mat(result_cols, result_rows, CvType.CV_8U);
 
@@ -457,9 +517,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         Imgproc.rectangle(mRgba, matchLoc_tx, matchLoc_ty, new Scalar(255, 255, 0,
                 255));
-        Rect rec = new Rect(matchLoc_tx,matchLoc_ty);
 
-
+        return new Rect(matchLoc_tx, matchLoc_ty);
     }
 
     private Mat get_template(CascadeClassifier clasificator, Rect area, int size) {
@@ -481,6 +540,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             Rect eye_only_rectangle = new Rect((int) e.tl().x,
                     (int) (e.tl().y + e.height * 0.4), (int) e.width,
                     (int) (e.height * 0.6));
+            Imgproc.rectangle(mRgba, eye_only_rectangle.tl(), eye_only_rectangle.br(),
+                    new Scalar(255, 0, 0, 255), 2);
             mROI = mGray.submat(eye_only_rectangle);
             Mat vyrez = mRgba.submat(eye_only_rectangle);
 
@@ -503,5 +564,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public void onRecreateClick(View v)
     {
         learn_frames = 0;
+        centerX = 0;
+        centerY = 0;
     }
 }
