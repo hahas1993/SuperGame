@@ -72,6 +72,8 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 	double centerXT;
 	double centerYT;
 
+	private int faceOutOfScreen = 0;
+
 	MyGdxGame myGdxGame;
 
 	public AndroidLauncher() {
@@ -237,6 +239,22 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 					new Size());
 
 		Rect[] facesArray = faces.toArray();
+
+		if (facesArray.length == 0) {
+			if(faceOutOfScreen < 5)
+				faceOutOfScreen ++;
+			else if (faceOutOfScreen == 5) {
+				myGdxGame.setPause(true);
+				learn_frames = 0;
+			}
+		}
+		else {
+			faceOutOfScreen = 0;
+			if (myGdxGame.isPause() && learn_frames > 10) {
+				myGdxGame.setPause(false);
+			}
+		}
+
 		for (int i = 0; i < facesArray.length; i++) {
 			Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(),
 					FACE_RECT_COLOR, 3);
@@ -266,26 +284,21 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 			}
 			else {
 				if(learn_frames == 10) {
+					myGdxGame.setPause(false);
 					centerX /= 10;
 					centerY /= 10;
 					learn_frames ++;
 				}
 				centerXT = (eyearea_left.tl().x + eyearea_right.br().x) / 2;
-				centerYT += (eyearea_left.tl().y + eyearea_right.br().y) / 2;
+				centerYT = (eyearea_left.tl().y + eyearea_right.br().y) / 2;
 
-				myGdxGame.setDirection(centerX - centerXT);
-				Log.i(TAG, "" + (centerX - centerXT));
-
-/*				if(centerXT < centerX){
-					Log.i(TAG, "right");
-				}
-				else if(centerXT > centerX){
-					Log.i(TAG, "left");
-				}*/
+				myGdxGame.setDirectionX(centerX - centerXT);
+				myGdxGame.setDirectionY(centerY - centerYT);
+				Log.i(TAG, "" + (centerY - centerYT));
 			}
 		}
 
-		return mRgba;
+		return null;
 	}
 
 	@Override
