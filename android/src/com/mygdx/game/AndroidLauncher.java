@@ -1,20 +1,20 @@
 package com.mygdx.game;
 
-import android.annotation.TargetApi;
-import android.hardware.Camera;
 import android.content.Context;
-import android.os.Build;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.widget.ShareDialog;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -97,6 +97,19 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 		}
 		//initialize(new MyGdxGame(), config);
 
+		FacebookSdk.sdkInitialize(getApplicationContext());
+		AppEventsLogger.activateApp(this);
+		ShareDialog shareDialog = new ShareDialog(this);
+		if (ShareDialog.canShow(ShareLinkContent.class)) {
+			ShareLinkContent linkContent = new ShareLinkContent.Builder()
+					.setContentTitle("SuperGame")
+					.setContentDescription(
+							"I am developing a game with head as controller")
+					.setContentUrl(Uri.parse("http://developers.facebook.com/android"))
+					.build();
+
+			shareDialog.show(linkContent);
+		}
 
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -333,12 +346,5 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 	private void setMinFaceSize(float faceSize) {
 		mRelativeFaceSize = faceSize;
 		mAbsoluteFaceSize = 0;
-	}
-
-	public void onRecreateClick(View v)
-	{
-		learn_frames = 0;
-		centerX = 0;
-		centerY = 0;
 	}
 }

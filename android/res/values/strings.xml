@@ -2,5 +2,6 @@
 <resources>
 
     <string name="app_name">my-gdx-game</string>
+    <string name="facebook_app_id">298446567166730</string>
 
 </resources>

@@ -108,12 +108,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		batch.end();
 
-		if(Math.abs(directionX) > 15) {
-			bucket.x += directionX / 5;
+		if(Math.abs(directionX) > 18) {
+			bucket.x += directionX / 8;
 		}
-		if(Math.abs(directionY) > 15) {
+		/*if(Math.abs(directionY) > 15) {
 			bucket.y += directionY / 5;
-		}
+		}*/
 
 		if(bucket.x < 0)
 			bucket.x = 0;
