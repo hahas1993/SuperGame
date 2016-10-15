@@ -11,10 +11,6 @@ import android.widget.RelativeLayout;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
-import com.facebook.share.model.ShareLinkContent;
-import com.facebook.share.widget.ShareDialog;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -292,7 +288,7 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 				centerYT = (eyearea_left.tl().y + eyearea_right.br().y) / 2;
 
 				myGdxGame.setDirectionX(centerX - centerXT);
-				myGdxGame.setDirectionY(centerY - centerYT);
+				//myGdxGame.setDirectionY(centerY - centerYT);
 				Log.i(TAG, "" + (centerY - centerYT));
 			}
 		}

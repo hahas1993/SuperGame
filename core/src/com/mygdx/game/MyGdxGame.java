@@ -7,8 +7,10 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
@@ -18,58 +20,101 @@ import java.util.Iterator;
 
 public class MyGdxGame extends ApplicationAdapter {
 
-	private Texture dropImage;
-	private Texture bucketImage;
-	private Sound dropSound;
-	private Music rainMusic;
+	private Texture coinImage;
+	private int coinWidth;
+	private int coinHeight;
+	private TextureRegion[] coinFrames;
+	private Texture asteroidImage;
+	private int asteroidWidth;
+	private int asteroidHeight;
+	private TextureRegion[] asteroidFrames;
+	private TextureRegion currentFrame;
+	private Texture playerShipImage;
+	//private Sound dropSound;
+	//private Music rainMusic;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
-	private Rectangle bucket;
-	private Array<Rectangle> raindrops;
-	private long lastDropTime;
+	private Rectangle playerShip;
+	private Array<Animation> coins;
+	private Array<Animation> asteroids;
+	private Array<Rectangle> coinsR;
+	private Array<Rectangle> asteroidsR;
+	private long lastCoinTime;
+	private long lastAsteroidTime;
 
 	private double directionX = 0;
-	private double directionY = 0;
 
-	private int life = 5;
-	private int score = 0;
-	CharSequence lifeString = "5";
-	CharSequence scoreString = "0";
+	private final int START_LIFE = 5;
+	private final int START_SCORE = 0;
+	private int life = START_LIFE;
+	private int score = START_SCORE;
+	CharSequence lifeString = String.valueOf(START_LIFE);
+	CharSequence scoreString = String.valueOf(START_SCORE);
 	BitmapFont font;
 
 	boolean pause = true;
 	boolean end = false;
+	private float stateTime;
 
 	@Override
 	public void create () {
-		dropImage = new Texture(Gdx.files.internal("droplet.png"));
-		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
+		coinImage = new Texture(Gdx.files.internal("coin.png"));
+		coinHeight = coinImage.getHeight();
+		coinWidth = coinImage.getWidth()/8;
+		TextureRegion[][] tmp = TextureRegion.split(coinImage, coinWidth, coinHeight);
+		coinFrames = new TextureRegion[8];
+		int index = 0;
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 8; j++) {
+				coinFrames[index++] = tmp[i][j];
+			}
+		}
 
-		dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
-		rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
+		asteroidImage = new Texture(Gdx.files.internal("asteroid.png"));
+		asteroidHeight = asteroidImage.getHeight()/4;
+		asteroidWidth = asteroidImage.getWidth()/5;
+		tmp = TextureRegion.split(asteroidImage, asteroidWidth, asteroidHeight);
+		asteroidFrames = new TextureRegion[19];
+		index = 0;
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 5; j++) {
+				if (i < 3 || j < 4)
+					asteroidFrames[index++] = tmp[i][j];
+			}
+		}
 
-		rainMusic.setLooping(true);
-		rainMusic.play();
+		playerShipImage = new Texture(Gdx.files.internal("playerShip.png"));
+
+		//dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
+		//rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
+
+		//rainMusic.setLooping(true);
+		//rainMusic.play();
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
 
-		bucket = new Rectangle();
-		bucket.x = 800/ 2 - 64 / 2;
-		bucket.y = 20;
-		bucket.width = 64;
-		bucket.height = 64;
+		playerShip = new Rectangle();
+		playerShip.x = 800/ 2 - playerShipImage.getWidth() / 2;
+		playerShip.y = 20;
+		playerShip.width = playerShipImage.getWidth();
+		playerShip.height = playerShipImage.getHeight();
 
-		raindrops = new Array<Rectangle>();
+		coins = new Array<Animation>();
+		asteroids = new Array<Animation>();
+		coinsR = new Array<Rectangle>();
+		asteroidsR = new Array<Rectangle>();
 
 		font = new BitmapFont();
 		font.getData().setScale(2);
+
+		stateTime = 0f;
 	}
 
 	@Override
 	public void render () {
-		Gdx.gl.glClearColor(0, 0, 0.2f, 1);
+		Gdx.gl.glClearColor(0, 0, 0.1f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
 
@@ -81,7 +126,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			font.draw(batch, lifeString, 30, 460);
 			font.draw(batch, scoreString, 770, 460);
 			font.draw(batch, "head your face on screen center", 200, 240);
-			batch.draw(bucketImage, bucket.x, bucket.y);
+			batch.draw(playerShipImage, playerShip.x, playerShip.y);
 			batch.end();
 			if(Gdx.input.isTouched()) {
 				restart();
@@ -99,94 +144,153 @@ public class MyGdxGame extends ApplicationAdapter {
 			return;
 		}
 
+		stateTime += Gdx.graphics.getDeltaTime();
 		batch.begin();
 		font.draw(batch, lifeString, 30, 460);
 		font.draw(batch, scoreString, 770, 460);
-		batch.draw(bucketImage, bucket.x, bucket.y);
-		for(Rectangle raindrop : raindrops) {
-			batch.draw(dropImage, raindrop.x, raindrop.y);
+		batch.draw(playerShipImage, playerShip.x, playerShip.y);
+		int index = 0;
+		for(Animation coinAnimation : coins) {
+			currentFrame = coinAnimation.getKeyFrame(stateTime, true);
+			batch.draw(currentFrame, coinsR.get(index).x, coinsR.get(index).y);
+			index ++;
+		}
+		index = 0;
+		for(Animation asteroidAnimation : asteroids) {
+			currentFrame = asteroidAnimation.getKeyFrame(stateTime, true);
+			batch.draw(currentFrame, asteroidsR.get(index).x, asteroidsR.get(index).y);
+			index ++;
 		}
 		batch.end();
 
 		if(Math.abs(directionX) > 18) {
-			bucket.x += directionX / 8;
+			playerShip.x += directionX / 8;
 		}
-		/*if(Math.abs(directionY) > 15) {
-			bucket.y += directionY / 5;
-		}*/
 
-		if(bucket.x < 0)
-			bucket.x = 0;
-		if(bucket.x > 800 - 64)
-			bucket.x = 800 - 64;
-		if(bucket.y < 0)
-			bucket.y = 0;
-		if(bucket.y > 480 - 64)
-			bucket.y = 480 - 64;
+		if(playerShip.x < 0)
+			playerShip.x = 0;
+		if(playerShip.x > 800 - playerShip.getWidth())
+			playerShip.x = 800 - playerShip.getWidth();
+		if(playerShip.y < 0)
+			playerShip.y = 0;
+		if(playerShip.y > 480 - playerShip.getHeight())
+			playerShip.y = 480 - playerShip.getHeight();
 
-		if(TimeUtils.nanoTime() - lastDropTime > 1500000000)
-			spawnRaindrop();
+		if(TimeUtils.nanoTime() - lastCoinTime > 1000000000)
+			spawnCoin();
 
-		Iterator<Rectangle> iter = raindrops.iterator();
+		if(TimeUtils.nanoTime() - lastAsteroidTime > 1500000000)
+			spawnAsteroid();
+
+		Iterator<Rectangle> iter = coinsR.iterator();
+		Iterator<Animation> iterA = coins.iterator();
 		while(iter.hasNext()) {
-			Rectangle raindrop = iter.next();
-			raindrop.y -= 150 * Gdx.graphics.getDeltaTime();
-			if (raindrop.y + 64 < 0) {
+			Rectangle coin = iter.next();
+			iterA.next();
+			coin.y -= 50 * Gdx.graphics.getDeltaTime();
+			if (coin.y + coinHeight < 0) {
+				iter.remove();
+				iterA.remove();
+			}
+			if(coin.overlaps(playerShip)) {
+				//dropSound.play();
+				score ++;
+				iter.remove();
+				iterA.remove();
+			}
+		}
+
+		iter = asteroidsR.iterator();
+		iterA = asteroids.iterator();
+		while(iter.hasNext()) {
+			Rectangle asteroid = iter.next();
+			iterA.next();
+			asteroid.y -= 120 * Gdx.graphics.getDeltaTime();
+			if (asteroid.y + asteroidHeight < 0) {
+				iter.remove();
+				iterA.remove();
+			}
+			if(asteroid.overlaps(playerShip)) {
+				//dropSound.play();
 				life --;
 				iter.remove();
-				if( life <= 0){
+				iterA.remove();
+				if(life <= 0){
 					life = 0;
 					end = true;
 				}
 			}
-			if(raindrop.overlaps(bucket)) {
-				dropSound.play();
-				score ++;
-				iter.remove();
-			}
 		}
 	}
 
-	private void restart(){
-		life = 5;
-		score = 0;
-		lifeString = "5";
-		scoreString = "0";
+	private void restart() {
+		life = START_LIFE;
+		score = START_SCORE;
+		lifeString = String.valueOf(START_LIFE);
+		scoreString = String.valueOf(START_SCORE);
 		end = false;
 		pause = false;
 
-		Iterator<Rectangle> iter = raindrops.iterator();
+		Iterator<Rectangle> iter = coinsR.iterator();
 		while(iter.hasNext()) {
 			iter.next();
 			iter.remove();
 		}
+		Iterator<Animation> iterA = coins.iterator();
+		while(iterA.hasNext()) {
+			iterA.next();
+			iterA.remove();
+		}
+		iter = asteroidsR.iterator();
+		while(iter.hasNext()) {
+			iter.next();
+			iter.remove();
+		}
+		iterA = asteroids.iterator();
+		while(iterA.hasNext()) {
+			iterA.next();
+			iterA.remove();
+		}
 
-		bucket.x = 800/ 2 - 64 / 2;
-		bucket.y = 20;
+
+		playerShip.x = 800/ 2 - playerShip.getWidth() / 2;
+		playerShip.y = 20;
 	}
 
 	public void setDirectionX(double directionX){
 		this.directionX = directionX;
 	}
-	public void setDirectionY(double directionY) { this.directionY = directionY; }
 
 	@Override
 	public void dispose() {
-		dropImage.dispose();
-		bucketImage.dispose();
-		dropSound.dispose();
-		rainMusic.dispose();
+		coinImage.dispose();
+		asteroidImage.dispose();
+		playerShipImage.dispose();
+		//dropSound.dispose();
+		//rainMusic.dispose();
 		batch.dispose();
 	}
 
-	private void spawnRaindrop() {
-		Rectangle raindrop = new Rectangle();
-		raindrop.x = MathUtils.random(0, 800 - 64);
-		raindrop.y = 480;
-		raindrop.width = 64;
-		raindrop.height = 64;
-		raindrops.add(raindrop);
-		lastDropTime = TimeUtils.nanoTime();
+	private void spawnCoin() {
+		Rectangle coin = new Rectangle();
+		coin.x = MathUtils.random(0, 800 - coinWidth);
+		coin.y = 480;
+		coin.width = coinWidth;
+		coin.height = coinHeight;
+		coinsR.add(coin);
+		coins.add(new Animation(0.025f, coinFrames));
+		lastCoinTime = TimeUtils.nanoTime();
+	}
+
+	private void spawnAsteroid() {
+		Rectangle asteroid = new Rectangle();
+		asteroid.x = MathUtils.random(0, 800 - asteroidWidth);
+		asteroid.y = 480;
+		asteroid.width = asteroidWidth;
+		asteroid.height = asteroidHeight;
+		asteroidsR.add(asteroid);
+		asteroids.add(new Animation(0.025f, asteroidFrames));
+		lastAsteroidTime = TimeUtils.nanoTime();
 	}
 
 	public boolean isPause() {
