@@ -25,7 +25,7 @@ public class Ranking extends Activity implements View.OnClickListener {
         n2 = (TextView)findViewById(R.id.textView3);
         n3 = (TextView)findViewById(R.id.textView4);
         back = (TextView)findViewById(R.id.textView5);
-
+        back.setOnClickListener(this);
         mydb=new DatabaseHelper(this);
         viewAll();
     }
