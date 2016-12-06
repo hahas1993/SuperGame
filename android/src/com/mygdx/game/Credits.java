@@ -2,32 +2,26 @@ package com.mygdx.game;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
-public class Ranking extends Activity implements View.OnClickListener {
-    DatabaseHelper mydb;
+public class Credits extends Activity implements View.OnClickListener {
     private TextView n1;
     private TextView n2;
     private TextView n3;
     private TextView back;
-    ArrayList<String> list;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ranking);
+        setContentView(R.layout.activity_credits);
         n1 = (TextView)findViewById(R.id.textView);
         n2 = (TextView)findViewById(R.id.textView3);
         n3 = (TextView)findViewById(R.id.textView4);
         back = (TextView)findViewById(R.id.textView5);
         back.setOnClickListener(this);
-        mydb=new DatabaseHelper(this);
         viewAll();
 
     }
@@ -40,27 +34,9 @@ public class Ranking extends Activity implements View.OnClickListener {
         }
     }
 
-    public void viewAll(){
-        list= new ArrayList<String>();
-        Cursor res= mydb.getAllData();
-        if(res.getCount()==0){//show message
-            return;
-        }
-        StringBuffer buffer = new StringBuffer();
-
-        while(res.moveToNext()){
-
-
-            list.add(res.getString(0));
-
-        }
-
-        //show all
-        Collections.sort(list);
-        Collections.reverse(list);
-        String g = list.get(0);
-        n1.setText(g);
-        n2.setText(list.get(1));
-        n3.setText(list.get(2));
+    public void viewAll() {
+        n1.setText("Paweł Matwiejuk");
+        n2.setText("Piotr Szymkowski");
+        n3.setText("Paweł Olszewski");
     }
 }

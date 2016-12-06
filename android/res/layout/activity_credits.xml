@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
 
     android:background="@drawable/background"
-    tools:context="com.mygdx.game.Ranking">
+    tools:context=".Credits">
 
     <TextView
         android:text="0"
@@ -45,7 +45,7 @@
         android:layout_centerHorizontal="true" />
 
     <TextView
-        android:text="HighScores"
+        android:text="Credits"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textView2"
