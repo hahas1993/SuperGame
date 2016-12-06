@@ -54,17 +54,44 @@ public class GameScreen implements Screen {
     private float stateTime;
 
     public GameScreen (final MyGdxGame game) {
+        int index;
+
+        /*
+
+                // mała moneta
+
         coinImage = new Texture(Gdx.files.internal("coin.png"));
         coinHeight = coinImage.getHeight();
         coinWidth = coinImage.getWidth() / 8;
         TextureRegion[][] tmp = TextureRegion.split(coinImage, coinWidth, coinHeight);
         coinFrames = new TextureRegion[8];
-        int index = 0;
+        index = 0;
         for (int i = 0; i < 1; i++) {
             for (int j = 0; j < 8; j++) {
                 coinFrames[index++] = tmp[i][j];
             }
         }
+
+        */
+
+                // duża moneta
+
+        coinImage = new Texture(Gdx.files.internal("coin1-1.gif"));
+        Texture[] coinImages = new Texture[14];
+        for (int i = 1; i < 14; i++)
+            coinImages[i] = new Texture(Gdx.files.internal("coin1-" + i + ".gif"));
+        coinHeight = coinImage.getHeight();
+        coinWidth = coinImage.getWidth();
+        TextureRegion[][] tmp = TextureRegion.split(coinImage, coinWidth, coinHeight);
+        coinFrames = new TextureRegion[13];
+
+        for (int j = 1; j < 14; j++) {
+            coinFrames[j-1] = TextureRegion.split(coinImages[j],coinWidth,coinHeight)[0][0];
+        }
+
+        /*
+
+            // mała asteroida
 
         asteroidImage = new Texture(Gdx.files.internal("asteroid.png"));
         asteroidHeight = asteroidImage.getHeight() / 4;
@@ -79,7 +106,28 @@ public class GameScreen implements Screen {
             }
         }
 
-        playerShipImage = new Texture(Gdx.files.internal("playerShip.png"));
+        */
+
+            // duża asteroida
+
+        asteroidImage = new Texture(Gdx.files.internal("asteroid1-1.gif"));
+        Texture[] asteroidImages = new Texture[26];
+        for (int i = 1; i < 26; i++)
+            asteroidImages[i] = new Texture(Gdx.files.internal("asteroid1-" + i + ".gif"));
+        asteroidHeight = asteroidImage.getHeight();
+        asteroidWidth = asteroidImage.getWidth();
+        tmp = TextureRegion.split(asteroidImage, asteroidWidth, asteroidHeight);
+        asteroidFrames = new TextureRegion[25];
+
+        for (int j = 1; j < 26; j++) {
+            asteroidFrames[j-1] = TextureRegion.split(asteroidImages[j],asteroidWidth,asteroidHeight)[0][0];
+        }
+
+
+
+       // playerShipImage = new Texture(Gdx.files.internal("playerShip.png"));
+
+        playerShipImage = new Texture(Gdx.files.internal("spaceShip.png"));
 
         //dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
         //rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
@@ -93,7 +141,7 @@ public class GameScreen implements Screen {
 
         playerShip = new Rectangle();
         playerShip.x = 800 / 2 - playerShipImage.getWidth() / 2;
-        playerShip.y = 20;
+        playerShip.y = 10;
         playerShip.width = playerShipImage.getWidth();
         playerShip.height = playerShipImage.getHeight();
 
@@ -250,7 +298,7 @@ public class GameScreen implements Screen {
 
 
         playerShip.x = 800 / 2 - playerShip.getWidth() / 2;
-        playerShip.y = 20;
+        playerShip.y = 10;
     }
 
     public void setDirectionX(double directionX) {
