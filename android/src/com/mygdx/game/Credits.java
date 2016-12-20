@@ -12,6 +12,7 @@ public class Credits extends Activity implements View.OnClickListener {
     private TextView n3;
     private TextView back;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 

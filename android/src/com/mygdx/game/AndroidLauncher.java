@@ -279,7 +279,6 @@ public class AndroidLauncher extends AndroidApplication implements CameraBridgeV
 
 				myGdxGame.setDirectionX(centerX - centerXT);
 				//myGdxGame.setDirectionY(centerY - centerYT);
-				Log.i(TAG, "" + (centerY - centerYT));
 			}
 		}
 

@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class GameScreen implements Screen {
     private Texture coinImage;
@@ -36,6 +37,11 @@ public class GameScreen implements Screen {
     private Array<Rectangle> asteroidsR;
     private long lastCoinTime;
     private long lastAsteroidTime;
+    private long asteroidNanos = 1500000000;
+    private long lastHarderTime;
+
+    private int asteroidSpeed = 120;
+    private int coinSpeed = 50;
 
     private double directionX = 0;
 
@@ -49,10 +55,12 @@ public class GameScreen implements Screen {
 
     private boolean pause = true;
     private boolean end = false;
+    private boolean firstEnd = true;
     private float stateTime;
 
-    public GameScreen (final MyGdxGame game) {
+    List<Integer> scores;
 
+    public GameScreen (final MyGdxGame game) {
         coinImage = new Texture(Gdx.files.internal("coin1-1.gif"));
         Texture[] coinImages = new Texture[14];
         for (int i = 1; i < 14; i++)
@@ -123,8 +131,14 @@ public class GameScreen implements Screen {
         }
 
         if (end) {
+
+            if(firstEnd) {
+                firstEnd = false;
+                Highscores.addScore(score);
+                scores = Highscores.getScores();
+            }
             batch.begin();
-            font.draw(batch, "final score: " + scoreString, 350, 240);
+            font.draw(batch, "your score: " + scoreString + "\n\nhighscores:\n      " + scores.get(0) + "\n      " + scores.get(1) + "\n      " + scores.get(2), 350, 300);
             batch.end();
             if (Gdx.input.isTouched()) {
                 restart();
@@ -167,15 +181,28 @@ public class GameScreen implements Screen {
         if (TimeUtils.nanoTime() - lastCoinTime > 1000000000)
             spawnCoin();
 
-        if (TimeUtils.nanoTime() - lastAsteroidTime > 1500000000)
+        if (TimeUtils.nanoTime() - lastAsteroidTime > asteroidNanos)
             spawnAsteroid();
+
+        if(TimeUtils.nanoTime() - lastHarderTime > 15000000000l) {
+            if(asteroidSpeed < 200) {
+                asteroidSpeed++;
+            }
+            if(coinSpeed < 100) {
+                coinSpeed++;
+            }
+            if(asteroidNanos > 1000000000) {
+                asteroidNanos -= 1000;
+            }
+            lastHarderTime = TimeUtils.nanoTime();
+        }
 
         Iterator<Rectangle> iter = coinsR.iterator();
         Iterator<Animation> iterA = coins.iterator();
         while (iter.hasNext()) {
             Rectangle coin = iter.next();
             iterA.next();
-            coin.y -= 50 * Gdx.graphics.getDeltaTime();
+            coin.y -= coinSpeed * Gdx.graphics.getDeltaTime();
             if (coin.y + coinHeight < 0) {
                 iter.remove();
                 iterA.remove();
@@ -193,7 +220,7 @@ public class GameScreen implements Screen {
         while (iter.hasNext()) {
             Rectangle asteroid = iter.next();
             iterA.next();
-            asteroid.y -= 120 * Gdx.graphics.getDeltaTime();
+            asteroid.y -= asteroidSpeed * Gdx.graphics.getDeltaTime();
             if (asteroid.y + asteroidHeight < 0) {
                 iter.remove();
                 iterA.remove();
@@ -205,6 +232,7 @@ public class GameScreen implements Screen {
                 iterA.remove();
                 if (life <= 0) {
                     life = 0;
+                    firstEnd = true;
                     end = true;
                 }
             }
@@ -259,8 +287,6 @@ public class GameScreen implements Screen {
         coinImage.dispose();
         asteroidImage.dispose();
         playerShipImage.dispose();
-        //dropSound.dispose();
-        //rainMusic.dispose();
         batch.dispose();
     }
 
